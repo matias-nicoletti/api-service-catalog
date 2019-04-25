@@ -1,0 +1,15 @@
+spring:
+  application:
+    name: api-service-catalog
+  cloud:
+    config:
+      uri: ${CONFIG_SERVER_URL:http://localhost:8888/}
+project:
+  version: @project.version@
+  name: @project.name@
+  description: @project.description@
+  groupId: @project.groupId@
+  artifactId: @project.artifactId@
+  
+server:
+  port: 8972

@@ -1,0 +1,17 @@
+spring:
+  datasource:
+    url: ${SERVICE_CATALOG_SPRING_DATASOURCE_URL}
+    username: ${SERVICE_CATALOG_SPRING_DATASOURCE_USERNAME}
+    password: ${SERVICE_CATALOG_DATASOURCE_PASSWORD}
+  jpa:
+    database-platform: CustomPostgresSqlDialect
+    hibernate:
+      ddl-auto: validate
+      
+flyway:
+  password: ${FLYWAY_SERVICE_CATALOG_PASSWORD:${spring.datasource.password}}
+  user: ${FLYWAY_SERVICE_CATALOG_USER:${spring.datasource.username}}
+  url: ${FLYWAY_SERVICE_CATALOG:${spring.datasource.url}}
+
+schedule:
+  cron: ${SERVICE_CATALOG_CRON_EXP:0 0 0/3 * * *}      

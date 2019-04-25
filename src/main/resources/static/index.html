@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html ng-app='app'>
+<head>
+	<meta charset="UTF-8">
+	<title>API SERVICE CATALOG</title>
+	<meta name="viewport"
+		  content="width=device-width, height=device-height, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+	<link rel="stylesheet"
+		  href="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+	<link rel="stylesheet" href="/service-catalog/css/main.css">
+</head>
+<body ng-controller="ControllerApp" class="container-fluid">
+
+<header class="row text-center bg-primary">
+	<h2 class="pull-left main-header text-uppercase">Api Service
+		Catalog</h2>
+	<section class="btn-group pull-right main-header-buttons">
+		<aside class="navbar-form navbar-right" role="search">
+			<div class="input-group">
+				<input ng-model="filterKey" ng-change="filter()" type="text"
+					   class="form-control" placeholder="Filtrar" name="srch-term"
+					   id="srch-term">
+				<div class="input-group-btn">
+					<button class="btn btn-primary" type="submit">
+						<i class="glyphicon glyphicon-search"></i>
+					</button>
+				</div>
+			</div>
+		</aside>
+	</section>
+</header>
+
+<!-- Left section -->
+<section class="col-md-3 section-panel">
+	<div class="panel panel-default">
+		<header class="panel-heading left-panel-header">
+			<h4 class="pull-left text-uppercase">Services<span class="badge">{{services.length}}</span></h4>
+			<aside class="pull-right">
+				<a class="btn btn-default" ng-click="loadData()"
+				   data-toggle="tooltip" data-placement="bottom"
+				   title="Refresh UI with the updated version"><span
+						class="glyphicon glyphicon-refresh"></span></a> <a
+					class="btn btn-default" ng-click="runAsynchronousUpdate()"
+					data-toggle="tooltip" data-placement="bottom"
+					title="Updates asynchronously the swaggers of each microservice"><span
+					class="glyphicon glyphicon-transfer"></span></a>
+			</aside>
+		</header>
+		<ul class="list-group ">
+			<li ng-repeat="service in services"
+				class="list-group-item animate-repeat-item "
+				ng-class="{'active': service.name == currentService.name}"
+				ng-click="showServiceDetail(service)" ng-hide="!service.visible">
+				{{service.name}}<small class="pull-right">{{service.version}}</small>
+			</li>
+		</ul>
+	</div>
+</section>
+
+<!-- Right section -->
+<section class="col-md-9 section-panel panel panel-default"
+		 ng-hide="currentService == null">
+
+
+	<header class="panel-heading row">
+		<h4>{{currentService.name}}<span ng-show="currentService.swagger.info.description"> - {{currentService.swagger.info.description}}</span></h4>
+	</header>
+
+	<article class="form-horizontal">
+		<div class="form-group">
+			<label class="control-label col-sm-2" for="email">Swagger:</label>
+			<div class="col-sm-10">
+				<p class="form-control-static">
+					<a href="{{currentService.swaggerUrl}}" target="_blank">{{currentService.swaggerUrl}}</a>
+				</p>
+			</div>
+		</div>
+		<div class="form-group">
+			<label class="control-label col-sm-2" for="port">Port:</label>
+			<div class="col-sm-10">
+				<p class="form-control-static">{{currentService.port}}</p>
+			</div>
+		</div>
+		<div class="form-group">
+			<label class="control-label col-sm-2" for="version">Versión:</label>
+			<div class="col-sm-10">
+				<p class="form-control-static">{{currentService.version}}</p>
+			</div>
+		</div>
+		<div class="form-group">
+			<label class="control-label col-sm-2" >Owner:</label>
+			<div class="col-sm-10">
+				<p class="form-control-static">{{currentService.swagger.info.contact.name}}</p>
+			</div>
+		</div>
+		<div class="form-group">
+			<label class="control-label col-sm-2" for="updated">Actualizado:</label>
+			<div class="col-sm-10">
+				<p class="form-control-static">{{currentService.dateUpdated}}</p>
+			</div>
+		</div>
+	</article>
+
+	<article class="list-group">
+		<div ng-repeat="(url,body1) in currentService.swagger.paths"
+			 class=" animate-repeat-item ">
+			<li class="list-group-item" ng-repeat="(method,body2) in body1"
+				data-toggle="modal" data-target="#detailModal"
+				ng-click="showEndpointDetail(method,url,body2)"
+				ng-hide="!body2.visible">
+				<h4>
+						<span class="label text-uppercase"
+							  ng-class="{'label-primary': method == 'get','label-success': method == 'post', 'label-warning': method == 'put', 'label-danger': method == 'delete'  }">{{method}}</span>
+					{{url}}
+				</h4>
+				<h5>
+						<span class="text-primary"><strong>{{body2.tags[0]}}
+								- </strong></span>{{body2.summary}}
+				</h5>
+			</li>
+		</div>
+	</article>
+</section>
+
+<!-- Detail Modal -->
+<section class="modal fade" id="detailModal" role="dialog">
+	<div class="modal-dialog modal-lg">
+		<div class="modal-content">
+			<header class="modal-header">
+				<button type="button" class="close" data-dismiss="modal">&times;</button>
+				<h4>
+						<span class="label text-uppercase"
+							  ng-class="{'label-primary': currentEndpointDetail.method == 'get','label-success': currentEndpointDetail.method == 'post', 'label-warning': currentEndpointDetail.method == 'put', 'label-danger': currentEndpointDetail.method == 'delete'  }">{{currentEndpointDetail.method}}</span>
+					{{currentEndpointDetail.url}}
+				</h4>
+				<h5>
+						<span class="text-primary"><strong>{{currentEndpointDetail.data.tags[0]}}
+								- </strong></span>{{currentEndpointDetail.data.summary}}
+				</h5>
+			</header>
+			<article class="modal-body">
+
+				<article class="form-horizontal">
+
+
+					<div class="form-group">
+						<label class="control-label col-sm-2" for="consumes">Consumes:</label>
+						<div class="col-sm-10">
+							<p class="form-control-static">{{currentEndpointDetail.data.consumes}}</p>
+						</div>
+					</div>
+					<div class="form-group">
+						<label class="control-label col-sm-2" for="produces">Produces:</label>
+						<div class="col-sm-10">
+							<p class="form-control-static">{{currentEndpointDetail.data.produces}}</p>
+						</div>
+					</div>
+
+					<div class="form-group">
+						<label class="control-label col-sm-2" for="parameters">Parameters:</label>
+						<div class="col-sm-10">
+							<table class="table table-hover">
+								<thead>
+								<tr>
+									<th>Name</th>
+									<th>Description</th>
+									<th>In</th>
+									<th>Required</th>
+									<th>Schema</th>
+								</tr>
+								</thead>
+								<tbody>
+								<tr
+										ng-repeat="parameter in currentEndpointDetail.data.parameters"
+										class="animate-repeat-item ">
+									<td>{{parameter.name}}</td>
+									<td>{{parameter.description}}</td>
+									<td class="text-uppercase">{{parameter.in}}</td>
+									<td><span class="glyphicon"
+											  ng-class="{'glyphicon-ok text-success': parameter.required,'glyphicon-remove text-danger': !parameter.required }"></span></td>
+									<td data-toggle="tooltip" data-placement="bottom"
+										title="{{parameter.schema.$ref}}"><a
+											ng-hide="parameter.schema.$ref == null"> <span>
+														View </span>
+									</a></td>
+								</tr>
+								</tbody>
+							</table>
+						</div>
+					</div>
+
+					<div class="form-group">
+						<label class="control-label col-sm-2" for="responses">Responses:</label>
+						<div class="col-sm-10">
+							<table class="table table-hover">
+								<thead>
+								<tr>
+									<th>Code</th>
+									<th>Description</th>
+									<th>Schema</th>
+								</tr>
+								</thead>
+								<tbody>
+								<tr
+										ng-repeat="(code,body3) in currentEndpointDetail.data.responses"
+										class="animate-repeat-item ">
+									<td>{{code}}</td>
+									<td>{{body3.description}}</td>
+
+									<td data-toggle="tooltip" data-placement="bottom"
+										title="{{body3.schema.$ref}}"><a
+											ng-hide="body3.schema.$ref == null"> <span> View
+												</span>
+									</a></td>
+								</tr>
+								</tbody>
+							</table>
+						</div>
+					</div>
+				</article>
+
+			</article>
+			<footer class="modal-footer">
+				<button type="button" class="btn btn-default" data-dismiss="modal">Cerrar</button>
+			</footer>
+		</div>
+	</div>
+</section>
+<script>
+		$(document).ready(function() {
+			$('body').tooltip({
+				selector : "[data-tooltip=tooltip]",
+				container : "body"
+			});
+		});
+	</script>
+<script
+		src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+<script
+		src="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+<script type="text/javascript"
+		src="//ajax.googleapis.com/ajax/libs/angularjs/1.0.7/angular.min.js"></script>
+<script src="/service-catalog/js/main.js"></script>
+
+
+</body>
+</html>
